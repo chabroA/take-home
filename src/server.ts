@@ -1,29 +1,36 @@
-import Fastify from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import { CryptoService } from './services/crypto-service';
 import { CryptoController } from './controllers/crypto-controller';
-import { Base64Encryption } from './algorithms/base64-encryption';
-import { HmacSigning } from './algorithms/hmac-signing';
 import cryptoRoutes from './routes/crypto-routes';
+import { EncryptionAlgorithm, SigningAlgorithm } from './interfaces/crypto';
 
-const server = Fastify({
-  logger: { level: 'error' },
-});
-
-// Register CORS plugin only in non-production environments
-if (process.env.NODE_ENV !== 'production') {
-  server.register(cors, {
-    origin: true,
+export function createServer({
+  encryptionAlgorithm,
+  signingAlgorithm,
+}: {
+  encryptionAlgorithm: EncryptionAlgorithm;
+  signingAlgorithm: SigningAlgorithm;
+}): FastifyInstance {
+  const server = Fastify({
+    logger: { level: 'error' },
   });
+
+  // Register CORS plugin only in non-production environments
+  if (process.env.NODE_ENV !== 'production') {
+    server.register(cors, {
+      origin: true,
+    });
+  }
+
+  const cryptoService = new CryptoService(
+    encryptionAlgorithm,
+    signingAlgorithm
+  );
+
+  const cryptoController = new CryptoController(cryptoService);
+
+  server.register(cryptoRoutes, { cryptoController });
+
+  return server;
 }
-
-const encryptionAlgorithm = new Base64Encryption();
-const signingAlgorithm = new HmacSigning();
-
-const cryptoService = new CryptoService(encryptionAlgorithm, signingAlgorithm);
-
-const cryptoController = new CryptoController(cryptoService);
-
-server.register(cryptoRoutes, { cryptoController });
-
-export default server;

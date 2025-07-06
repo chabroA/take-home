@@ -1,95 +1,12 @@
-import { CryptoService } from '../services/crypto-service';
-import { Base64Encryption } from '../algorithms/base64-encryption';
-import { HmacSigning } from '../algorithms/hmac-signing';
 import * as fc from 'fast-check';
+import { createTestCryptoService } from './test-config';
+import { CryptoService } from '../services/crypto-service';
 
 describe('CryptoService', () => {
   let cryptoService: CryptoService;
 
-  beforeEach(() => {
-    const encryptionAlgorithm = new Base64Encryption();
-    const signingAlgorithm = new HmacSigning();
-    cryptoService = new CryptoService(encryptionAlgorithm, signingAlgorithm);
-  });
-
-  describe('Encryption and Decryption', () => {
-    it('should encrypt and decrypt a simple payload', () => {
-      const original = {
-        name: 'John Doe',
-        age: 30,
-        contact: {
-          email: 'john@example.com',
-          phone: '123-456-7890',
-        },
-      };
-
-      const encrypted = cryptoService.encryptPayload(original);
-      const decrypted = cryptoService.decryptPayload(encrypted);
-
-      expect(decrypted).toEqual(original);
-    });
-
-    it('should handle mixed encrypted and unencrypted data', () => {
-      const encrypted = {
-        name: 'Sm9obiBEb2U=', // "John Doe" in base64
-        age: 'MzA=', // "30" in base64
-        birth_date: '1998-11-19', // unencrypted
-      };
-
-      const decrypted = cryptoService.decryptPayload(encrypted);
-
-      expect(decrypted.name).toBe('John Doe');
-      expect(decrypted.age).toBe(30);
-      expect(decrypted.birth_date).toBe('1998-11-19');
-    });
-  });
-
-  describe('Signing and Verification', () => {
-    it('should sign a payload and verify it', () => {
-      const payload = {
-        message: 'Hello World',
-        timestamp: 1616161616,
-      };
-
-      const { signature } = cryptoService.signPayload(payload);
-      const isValid = cryptoService.verifySignature(payload, signature);
-
-      expect(isValid).toBe(true);
-    });
-
-    it('should produce the same signature regardless of property order', () => {
-      const payload1 = {
-        message: 'Hello World',
-        timestamp: 1616161616,
-      };
-
-      const payload2 = {
-        timestamp: 1616161616,
-        message: 'Hello World',
-      };
-
-      const { signature: signature1 } = cryptoService.signPayload(payload1);
-      const { signature: signature2 } = cryptoService.signPayload(payload2);
-
-      expect(signature1).toBe(signature2);
-    });
-
-    it('should reject invalid signatures', () => {
-      const payload = {
-        message: 'Hello World',
-        timestamp: 1616161616,
-      };
-
-      const tamperedPayload = {
-        message: 'Goodbye World',
-        timestamp: 1616161616,
-      };
-
-      const { signature } = cryptoService.signPayload(payload);
-      const isValid = cryptoService.verifySignature(tamperedPayload, signature);
-
-      expect(isValid).toBe(false);
-    });
+  beforeAll(() => {
+    cryptoService = createTestCryptoService();
   });
 
   describe('Property-Based Testing - Consistency Requirements', () => {

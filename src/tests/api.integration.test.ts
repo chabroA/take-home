@@ -1,7 +1,11 @@
-import server from '../server';
+import { FastifyInstance } from 'fastify';
+import { createTestServer } from './test-config';
 
 describe('API Integration Tests', () => {
+  let server: FastifyInstance;
+
   beforeAll(async () => {
+    server = createTestServer();
     await server.ready();
   });
 
@@ -219,6 +223,7 @@ describe('API Integration Tests', () => {
     });
   });
 
+  // Minimal consistency tests - just verify the API contracts work end-to-end
   describe('API Consistency', () => {
     it('should support encrypt/decrypt round-trip via API', async () => {
       const originalPayload = { name: 'Test User', id: 123 };

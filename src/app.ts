@@ -1,8 +1,15 @@
 import '@dotenvx/dotenvx/config';
-import server from './server';
+import { createServer } from './server';
+import { Base64Encryption } from './algorithms/base64-encryption';
+import { HmacSigning } from './algorithms/hmac-signing';
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
+
+const server = createServer({
+  encryptionAlgorithm: new Base64Encryption(),
+  signingAlgorithm: new HmacSigning(),
+});
 
 const start = async () => {
   try {
