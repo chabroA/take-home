@@ -18,15 +18,12 @@ export class CryptoService {
     return {};
   }
 
-  signPayload(_payload: any): { signature: string } {
-    // TODO: Implement payload signing logic
-
-    return { signature: '' };
+  signPayload(payload: any): { signature: string } {
+    const signature = this.signingAlgorithm.sign(payload);
+    return { signature };
   }
 
-  verifySignature(_data: any, _signature: string): boolean {
-    // TODO: Implement signature verification logic
-
-    return false;
+  verifySignature(data: any, signature: string): boolean {
+    return this.signingAlgorithm.verify(data, signature);
   }
 }
