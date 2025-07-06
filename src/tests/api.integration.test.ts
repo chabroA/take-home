@@ -9,6 +9,94 @@ describe('API Integration Tests', () => {
     await server.close();
   });
 
+  describe('POST /encrypt', () => {
+    it('should encrypt a JSON payload', async () => {
+      const payload = {
+        name: 'John Doe',
+        age: 30,
+        contact: {
+          email: 'john@example.com',
+          phone: '123-456-7890',
+        },
+      };
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/encrypt',
+        payload: payload,
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.payload);
+      expect(body.name).toBe('Sm9obiBEb2U=');
+      expect(body.age).toBe('MzA=');
+      expect(body.contact).toBe(
+        'eyJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJwaG9uZSI6IjEyMy00NTYtNzg5MCJ9'
+      );
+    });
+
+    it('should return 400 for invalid payload', async () => {
+      const response = await server.inject({
+        method: 'POST',
+        url: '/encrypt',
+        payload: 'invalid json',
+        headers: {
+          'content-type': 'application/json',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+  });
+
+  describe('POST /decrypt', () => {
+    it('should decrypt a JSON payload', async () => {
+      const encryptedPayload = {
+        name: 'Sm9obiBEb2U=',
+        age: 'MzA=',
+        contact:
+          'eyJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJwaG9uZSI6IjEyMy00NTYtNzg5MCJ9',
+      };
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/decrypt',
+        payload: encryptedPayload,
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.payload);
+      expect(body.name).toBe('John Doe');
+      expect(body.age).toBe(30);
+      expect(body.contact).toEqual({
+        email: 'john@example.com',
+        phone: '123-456-7890',
+      });
+    });
+
+    it('should handle mixed encrypted and unencrypted data', async () => {
+      const mixedPayload = {
+        name: 'Sm9obiBEb2U=',
+        age: 'MzA=',
+        birth_date: '1998-11-19',
+        not_encrypted: 'blue',
+      };
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/decrypt',
+        payload: mixedPayload,
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.payload);
+      expect(body.name).toBe('John Doe');
+      expect(body.age).toBe(30);
+      expect(body.birth_date).toBe('1998-11-19');
+      expect(body.not_encrypted).toBe('blue');
+    });
+  });
+
   describe('POST /sign', () => {
     it('should sign a JSON payload', async () => {
       const payload = {
@@ -132,6 +220,31 @@ describe('API Integration Tests', () => {
   });
 
   describe('API Consistency', () => {
+    it('should support encrypt/decrypt round-trip via API', async () => {
+      const originalPayload = { name: 'Test User', id: 123 };
+
+      // Encrypt
+      const encryptResponse = await server.inject({
+        method: 'POST',
+        url: '/encrypt',
+        payload: originalPayload,
+      });
+
+      expect(encryptResponse.statusCode).toBe(200);
+      const encryptedPayload = JSON.parse(encryptResponse.payload);
+
+      // Decrypt
+      const decryptResponse = await server.inject({
+        method: 'POST',
+        url: '/decrypt',
+        payload: encryptedPayload,
+      });
+
+      expect(decryptResponse.statusCode).toBe(200);
+      const decryptedPayload = JSON.parse(decryptResponse.payload);
+      expect(decryptedPayload).toEqual(originalPayload);
+    });
+
     it('should support sign/verify round-trip via API', async () => {
       const originalPayload = { message: 'Test', timestamp: 1234567890 };
 
