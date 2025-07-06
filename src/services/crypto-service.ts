@@ -14,13 +14,7 @@ export class CryptoService {
     const result: EncryptedPayload = {};
 
     for (const [key, value] of Object.entries(payload)) {
-      if (typeof value === 'object' && value !== null) {
-        // For objects, stringify and then encrypt
-        result[key] = this.encryptionAlgorithm.encrypt(JSON.stringify(value));
-      } else {
-        // For primitive values, convert to string and encrypt
-        result[key] = this.encryptionAlgorithm.encrypt(String(value));
-      }
+      result[key] = this.encryptionAlgorithm.encrypt(JSON.stringify(value));
     }
 
     return result;
