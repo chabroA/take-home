@@ -4,16 +4,6 @@ import { SigningAlgorithm } from '../interfaces/crypto';
 import { JsonPayload } from '../types/crypto';
 
 /**
- * Configuration options for HMAC signing
- */
-export interface HmacSigningOptions {
-  /** The secret key for HMAC signing */
-  secret: string;
-  /** The hash algorithm to use (default: 'sha256') */
-  algorithm?: string;
-}
-
-/**
  * HMAC-based signing algorithm implementation.
  * Uses RFC 8785 JSON canonicalization for consistent serialization.
  */
@@ -21,9 +11,14 @@ export class HmacSigning implements SigningAlgorithm {
   private readonly secret: string;
   private readonly algorithm: string;
 
-  constructor(options: HmacSigningOptions) {
-    this.secret = options.secret;
-    this.algorithm = options.algorithm || 'sha256';
+  constructor() {
+    if (!process.env.HMAC_SECRET) {
+      console.error('Error: HMAC_SECRET environment variable is required');
+      process.exit(1);
+    }
+
+    this.secret = process.env.HMAC_SECRET;
+    this.algorithm = 'sha256';
   }
 
   /**

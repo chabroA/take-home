@@ -1,11 +1,12 @@
+import '@dotenvx/dotenvx/config';
 import server from './server';
 
-const PORT = 3000;
-const HOST = '0.0.0.0';
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 const start = async () => {
   try {
-    await server.listen({ port: PORT, host: HOST });
+    await server.listen({ port: Number(PORT), host: HOST });
     console.log(`Server is running on ${HOST}:${PORT}`);
     console.log(`Available endpoints:`);
     console.log(`  POST /encrypt - Encrypt JSON payload`);

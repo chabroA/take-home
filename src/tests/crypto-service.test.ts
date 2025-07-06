@@ -8,9 +8,7 @@ describe('CryptoService', () => {
 
   beforeEach(() => {
     const encryptionAlgorithm = new Base64Encryption();
-    const signingAlgorithm = new HmacSigning({
-      secret: 'riot-take-home-secret',
-    });
+    const signingAlgorithm = new HmacSigning();
     cryptoService = new CryptoService(encryptionAlgorithm, signingAlgorithm);
   });
 
