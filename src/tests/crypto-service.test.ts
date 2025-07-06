@@ -244,15 +244,16 @@ describe('CryptoService', () => {
               }),
             }),
             originalPayload => {
-              // Create the same payload with shuffled property order
-              const keys = Object.keys(originalPayload) as Array<
-                keyof typeof originalPayload
-              >;
-              const shuffledPayload: any = {};
+              // Create the same payload with different property order
+              const shuffledPayload: typeof originalPayload = {
+                prop4: originalPayload.prop4,
+                prop1: originalPayload.prop1,
+                prop3: originalPayload.prop3,
+                prop2: originalPayload.prop2,
+              };
 
-              keys.reverse().forEach(key => {
-                shuffledPayload[key] = originalPayload[key];
-              });
+              // Verify they have the same content (property order doesn't matter for equality)
+              expect(shuffledPayload).toEqual(originalPayload);
 
               const { signature: signature1 } =
                 cryptoService.signPayload(originalPayload);
@@ -396,9 +397,13 @@ describe('CryptoService', () => {
               // 5. Extract the signature and verify it against the original data
               const { signature: extractedSignature, ...dataWithoutSignature } =
                 decrypted;
+
+              // Ensure signature is a string
+              expect(typeof extractedSignature).toBe('string');
+
               const isValid = cryptoService.verifySignature(
                 dataWithoutSignature,
-                extractedSignature
+                extractedSignature as string
               );
 
               expect(isValid).toBe(true);

@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 import canonicalize from 'canonicalize';
 import { SigningAlgorithm } from '../interfaces/crypto';
+import { JsonPayload } from '../types/crypto';
 
 /**
  * Configuration options for HMAC signing
@@ -32,7 +33,7 @@ export class HmacSigning implements SigningAlgorithm {
    * @returns The signature as a hexadecimal string
    * @throws Error if signing fails
    */
-  sign(data: any): string {
+  sign(data: JsonPayload): string {
     try {
       // Use RFC 8785 canonicalization for consistent, crypto-safe serialization
       const canonicalData = canonicalize(data);
@@ -57,7 +58,7 @@ export class HmacSigning implements SigningAlgorithm {
    * @param signature - The signature to verify against
    * @returns True if the signature is valid
    */
-  verify(data: any, signature: string): boolean {
+  verify(data: JsonPayload, signature: string): boolean {
     try {
       if (signature.length === 0) {
         return false;

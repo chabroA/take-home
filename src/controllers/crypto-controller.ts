@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { CryptoService } from '../services/crypto-service';
+import { isJsonPayload, isSignedPayload } from '../types/crypto';
 
 export class CryptoController {
   constructor(private cryptoService: CryptoService) {}
@@ -11,8 +12,10 @@ export class CryptoController {
     try {
       const payload = request.body;
 
-      if (!payload || typeof payload !== 'object') {
-        reply.status(400).send({ error: 'Invalid JSON payload' });
+      if (!isJsonPayload(payload)) {
+        reply
+          .status(400)
+          .send({ error: 'Invalid JSON payload - must be an object' });
         return;
       }
 
@@ -31,8 +34,10 @@ export class CryptoController {
     try {
       const payload = request.body;
 
-      if (!payload || typeof payload !== 'object') {
-        reply.status(400).send({ error: 'Invalid JSON payload' });
+      if (!isJsonPayload(payload)) {
+        reply
+          .status(400)
+          .send({ error: 'Invalid JSON payload - must be an object' });
         return;
       }
 
@@ -51,8 +56,10 @@ export class CryptoController {
     try {
       const payload = request.body;
 
-      if (!payload || typeof payload !== 'object') {
-        reply.status(400).send({ error: 'Invalid JSON payload' });
+      if (!isJsonPayload(payload)) {
+        reply
+          .status(400)
+          .send({ error: 'Invalid JSON payload - must be an object' });
         return;
       }
 
@@ -69,14 +76,16 @@ export class CryptoController {
     reply: FastifyReply
   ): Promise<void> => {
     try {
-      const body = request.body as { signature?: string; data?: any };
-      const { signature, data } = body;
+      const body = request.body;
 
-      if (!signature || !data) {
-        reply.status(400).send({ error: 'Missing signature or data' });
+      if (!isSignedPayload(body)) {
+        reply.status(400).send({
+          error: 'Invalid payload - must contain signature and data properties',
+        });
         return;
       }
 
+      const { signature, data } = body;
       const isValid = this.cryptoService.verifySignature(data, signature);
 
       if (isValid) {

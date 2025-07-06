@@ -1,13 +1,17 @@
 import { EncryptionAlgorithm, SigningAlgorithm } from '../interfaces/crypto';
-
+import {
+  JsonPayload,
+  EncryptedPayload,
+  SignatureResult,
+} from '../types/crypto';
 export class CryptoService {
   constructor(
     private encryptionAlgorithm: EncryptionAlgorithm,
     private signingAlgorithm: SigningAlgorithm
   ) {}
 
-  encryptPayload(payload: any): any {
-    const result: any = {};
+  encryptPayload(payload: JsonPayload): EncryptedPayload {
+    const result: EncryptedPayload = {};
 
     for (const [key, value] of Object.entries(payload)) {
       if (typeof value === 'object' && value !== null) {
@@ -22,8 +26,8 @@ export class CryptoService {
     return result;
   }
 
-  decryptPayload(payload: any): any {
-    const result: any = {};
+  decryptPayload(payload: JsonPayload): JsonPayload {
+    const result: JsonPayload = {};
 
     for (const [key, value] of Object.entries(payload)) {
       if (typeof value === 'string') {
@@ -54,12 +58,12 @@ export class CryptoService {
     return result;
   }
 
-  signPayload(payload: any): { signature: string } {
+  signPayload(payload: JsonPayload): SignatureResult {
     const signature = this.signingAlgorithm.sign(payload);
     return { signature };
   }
 
-  verifySignature(data: any, signature: string): boolean {
+  verifySignature(data: JsonPayload, signature: string): boolean {
     return this.signingAlgorithm.verify(data, signature);
   }
 }
