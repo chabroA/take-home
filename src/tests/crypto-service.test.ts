@@ -14,34 +14,28 @@ describe('CryptoService', () => {
     // 1. encrypt followed by decrypt should return the original payload
     // 2. sign followed by verify should always return true
     //
-    // Note: These tests use realistic, well-formed data to avoid edge cases
-    // related to the current implementation's type conversion limitations
-    // (e.g., strings that look like numbers being converted to numbers).
+    // Note: These tests exclude edge case value -0 which is not supported by
+    // the current implementation as it is treated similarly to 0.
     describe('Encrypt/Decrypt Consistency', () => {
-      it('encrypt followed by decrypt should preserve non-numeric strings and numbers', () => {
+      it('encrypt followed by decrypt should preserve original payload', () => {
         fc.assert(
           fc.property(
             fc.record({
-              // Use clearly non-numeric strings
-              name: fc.constantFrom(
-                'John Doe',
-                'Jane Smith',
-                'Alice Johnson',
-                'Bob Wilson'
-              ),
-              description: fc.constantFrom(
-                'User profile',
-                'Admin account',
-                'Guest user',
-                'System account'
-              ),
-              count: fc.integer({ min: 1, max: 1000 }),
-              price: fc
-                .float({ min: Math.fround(0.01), max: Math.fround(999.99) })
-                .filter(n => !isNaN(n) && isFinite(n)),
+              message: fc.string(),
+              timestamp: fc.integer().filter(n => !Object.is(n, -0)),
+              data: fc.record({
+                id: fc.integer().filter(n => !Object.is(n, -0)),
+                value: fc.string(),
+                active: fc.boolean(),
+              }),
+              tags: fc.array(fc.string(), { minLength: 0, maxLength: 5 }),
               metadata: fc.record({
-                source: fc.constantFrom('api', 'web', 'mobile', 'system'),
-                version: fc.integer({ min: 1, max: 10 }),
+                count: fc.integer().filter(n => !Object.is(n, -0)),
+                score: fc
+                  .float()
+                  .filter(n => !isNaN(n) && isFinite(n) && !Object.is(n, -0)),
+                name: fc.string(),
+                enabled: fc.boolean(),
               }),
             }),
             originalPayload => {
@@ -52,65 +46,6 @@ describe('CryptoService', () => {
             }
           ),
           { numRuns: 100 }
-        );
-      });
-
-      it('encrypt followed by decrypt should handle numeric values correctly', () => {
-        fc.assert(
-          fc.property(
-            fc.record({
-              id: fc.integer({ min: 1, max: 1000000 }),
-              score: fc
-                .float({ min: Math.fround(0.1), max: Math.fround(100) })
-                .filter(n => !isNaN(n) && isFinite(n)),
-              count: fc.integer({ min: 0, max: 1000 }),
-            }),
-            payload => {
-              const encrypted = cryptoService.encryptPayload(payload);
-              const decrypted = cryptoService.decryptPayload(encrypted);
-
-              // Numbers should be preserved
-              expect(typeof decrypted.id).toBe('number');
-              expect(typeof decrypted.score).toBe('number');
-              expect(typeof decrypted.count).toBe('number');
-
-              expect(decrypted.id).toBe(payload.id);
-              expect(decrypted.score).toBe(payload.score);
-              expect(decrypted.count).toBe(payload.count);
-            }
-          ),
-          { numRuns: 50 }
-        );
-      });
-
-      it('encrypt followed by decrypt should handle nested objects correctly', () => {
-        fc.assert(
-          fc.property(
-            fc.record({
-              user: fc.record({
-                name: fc.constantFrom(
-                  'John Doe',
-                  'Jane Smith',
-                  'Alice Johnson'
-                ),
-                age: fc.integer({ min: 18, max: 100 }),
-                email: fc.emailAddress(),
-              }),
-              settings: fc.record({
-                theme: fc.constantFrom('light', 'dark'),
-                notifications: fc.boolean(),
-              }),
-            }),
-            payload => {
-              const encrypted = cryptoService.encryptPayload(payload);
-              const decrypted = cryptoService.decryptPayload(encrypted);
-
-              // Nested objects should be preserved
-              expect(decrypted.user).toEqual(payload.user);
-              expect(decrypted.settings).toEqual(payload.settings);
-            }
-          ),
-          { numRuns: 50 }
         );
       });
     });

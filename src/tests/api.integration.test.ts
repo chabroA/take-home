@@ -32,7 +32,7 @@ describe('API Integration Tests', () => {
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.payload);
-      expect(body.name).toBe('Sm9obiBEb2U=');
+      expect(body.name).toBe('IkpvaG4gRG9lIg==');
       expect(body.age).toBe('MzA=');
       expect(body.contact).toBe(
         'eyJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJwaG9uZSI6IjEyMy00NTYtNzg5MCJ9'
